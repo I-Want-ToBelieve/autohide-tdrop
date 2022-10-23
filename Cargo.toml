@@ -1,0 +1,20 @@
+[package]
+name = "autohide-tdrop"
+version = "1.0.2"
+edition = "2021"
+description = "100% pure rust implementation that can automatically hide terminals or other applications managed by tdrop when they lose focus"
+authors = ["backtolife2021"]
+repository = "https://github.com/backtolife2021/autohide-tdrop"
+homepage = "https://github.com/backtolife2021/autohide-tdrop"
+readme = "README.md"
+keywords = ["autohide", "tdrop"]
+license = "MIT"
+
+[[bin]]
+name = "autohide-tdrop"
+path = "src/main.rs"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+breadx = "3.1.0"
