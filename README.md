@@ -13,5 +13,5 @@ cargo install autohide-tdrop
 ~/.config/sxhkd/sxhkdrc
 ```zsh
 ctrl + t
-	tdrop -n tdrop_kitty --post-create-hook "autohide-tdrop &" -ma -h 60% -w 70% -x 15% -y 0 env GLFW_IM_MODULE=ibus kitty --class=tdrop_kitty
+	tdrop -n tdrop_kitty --post-create-hook "autohide-tdrop &" -ma -h 60% -w 70% -x 15% -y 0 kitty --class=tdrop_kitty
 ```
