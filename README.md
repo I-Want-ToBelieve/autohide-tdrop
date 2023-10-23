@@ -34,10 +34,7 @@ using fish shell as an example:
 # Hope this helps!
 
 if test "$KITTY_DISABLE_WAYLAND" = "1" -a -n "$WAYLAND_DISPLAY_OLD"
-  echo $KITTY_DISABLE_WAYLAND
-  echo $WAYLAND_DISPLAY_OLD
   set -x WAYLAND_DISPLAY $WAYLAND_DISPLAY_OLD
-  echo $WAYLAND_DISPLAY
 end
 ```
 
