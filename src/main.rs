@@ -49,45 +49,44 @@ fn main() -> Result<(), Box<dyn Error>> {
 
         connection.change_window_attributes_checked(
             root,
-            ChangeWindowAttributesAux {
-                event_mask: EventMask::PROPERTY_CHANGE.into(),
-                background_pixmap: None,
-                background_pixel: None,
-                border_pixmap: None,
-                border_pixel: None,
-                bit_gravity: None,
-                win_gravity: None,
-                backing_store: None,
-                backing_planes: None,
-                backing_pixel: None,
-                override_redirect: None,
-                save_under: None,
-                do_not_propogate_mask: None,
-                colormap: None,
-                cursor: None,
-            },
+            ChangeWindowAttributesAux::default().event_mask(EventMask::PROPERTY_CHANGE),
         )?;
 
         // primary event loop
         loop {
-            let event = connection.wait_for_event()?;
+            let event = connection.wait_for_event();
 
             match event {
                 // match on the Event struct in here
-                PropertyNotify(e) => {
+                Ok(PropertyNotify(e)) => {
                     if e.atom == net_active_window {
                         if let Ok(active_window) =
                             get_active_window(&mut connection, root, net_active_window)
                         {
                             if &active_window != window_id {
-                                connection.unmap_window_checked(*window_id)?;
+                                match connection.unmap_window_checked(*window_id) {
+                                    Ok(_) => (),
+                                    Err(err) => {
+                                        eprintln!("Error unmapping window: {:?}", err);
+                                        break;
+                                    }
+                                }
                             }
+                        } else {
+                            eprintln!("Error getting active window");
+                            break;
                         }
                     }
                 }
-                _ => {}
+                Err(_) => {
+                    eprintln!("X11 server has crashed, exiting program.");
+                    std::process::exit(1);
+                }
+                Ok(_) => todo!(),
             }
         }
+    } else {
+        eprintln!("Error getting initial active window");
     }
 
     Ok(())

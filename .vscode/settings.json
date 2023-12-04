@@ -1,0 +1,50 @@
+{
+  "editor.codeActionsOnSave": {
+    "source.fixAll": true
+  },
+  "eslint.options": {
+    // "overrideConfigFile": "eslint.config.js"
+  },
+  "rust-analyzer.linkedProjects": ["Cargo.toml"],
+  "nixEnvSelector.nixFile": "${workspaceRoot}/flake.nix",
+  "[rust]": {
+    "editor.defaultFormatter": "statiolake.vscode-rustfmt",
+    "editor.tabSize": 2
+  },
+  "rust-analyzer.rustfmt.extraArgs": ["--config", "tab_spaces=2"],
+  "typescript.preferences.importModuleSpecifier": "non-relative",
+  "javascript.preferences.importModuleSpecifier": "non-relative",
+  "[objective-c]": {
+    "editor.defaultFormatter": "xaver.clang-format"
+  },
+  "[typescript]": {
+    "editor.defaultFormatter": "numso.prettier-standard-vscode",
+    "editor.formatOnSave": false
+  },
+  "[javascript]": {
+    "editor.defaultFormatter": "numso.prettier-standard-vscode",
+    "editor.formatOnSave": false
+  },
+  "[jsonc]": {
+    "editor.defaultFormatter": "numso.prettier-standard-vscode",
+    "editor.formatOnSave": true
+  },
+  "[json]": {
+    "editor.defaultFormatter": "numso.prettier-standard-vscode"
+  },
+  "[md]": {
+    "editor.defaultFormatter": "numso.prettier-standard-vscode",
+    "editor.formatOnSave": true
+  }
+  // "runOnSave.statusMessageTimeout": 3000,
+  // "runOnSave.commands": [
+  //   {
+  //     // Match less files except names start with `_`.
+  //     "globMatch": "**/[^_]*.*",
+  //     "command": "treefmt ${file}",
+  //     "runIn": "backend",
+  //     "runningStatusMessage": "Formating ${fileBasename}",
+  //     "finishStatusMessage": "${fileBasename} formated"
+  //   }
+  // ]
+}
