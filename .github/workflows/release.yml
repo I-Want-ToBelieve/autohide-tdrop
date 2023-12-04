@@ -1,22 +1,37 @@
----
-  name: Release
+name: Release
 
-  on:
-    push:
-      branches:
-        - main
-        - next
-        - next-major
-        - beta
-        - alpha
-        - "[0-9]+.[0-9]+.x"
-        - "[0-9]+.x"
+on:
+  push:
+    branches:
+      - main
 
-  jobs:
-    release:
-      uses: semantic-release-action/rust/.github/workflows/release-binary.yml@v5
-      with:
-        targets: |
-          x86_64-unknown-linux-gnu
-      secrets:
-        cargo-registry-token: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+
+      - name: Build
+        run: cargo build --release
+
+      - name: Run tests
+        run: cargo test
+
+      - name: Install cargo-release
+        run: cargo install cargo-release
+
+      - name: Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+        run: |
+          git config user.name I-Want-ToBelieve
+          git config user.email i.want.tobelieve.dev@gmail.com
+          cargo release --execute --no-confirm
