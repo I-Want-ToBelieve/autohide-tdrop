@@ -47,13 +47,14 @@
         system,
         ...
       }: let
-        cargoBuildInputs =
-          pkgs.lib.optionals pkgs.stdenv.isDarwin
-          (with pkgs.darwin.apple_sdk; [
-            frameworks.Security
-            frameworks.CoreServices
-          ]);
+        cargoToml = builtins.fromTOML (builtins.readFile ./Cargo.toml);
       in {
+        # Rust package
+        packages.default = pkgs.rustPlatform.buildRustPackage {
+          inherit (cargoToml.package) name version;
+          src = ./.;
+          cargoLock.lockFile = ./Cargo.lock;
+        };
         # Per-system attributes can be defined here. The self' and inputs'
         # module parameters provide easy access to attributes of the same
         # system.
