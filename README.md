@@ -3,9 +3,42 @@
 100% pure rust implementation that can automatically hide terminals or other applications managed by tdrop when they lose focus
 
 ## Installation
-
+Cargo
 ```zsh
 cargo install autohide-tdrop
+```
+Or ArchLinux
+
+```zsh
+paru -S autohide-tdrop-git
+```
+
+Or Nix
+
+flake.nix
+```flake.nix
+{
+  inputs = {
+    autohide-tdrop = {
+      url = "github:I-Want-ToBelieve/autohide-tdrop";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+  };
+}
+```
+
+home.nix
+```nix
+{
+  inputs,
+  pkgs,
+  ...
+}: {
+  home.packages = with inputs;
+    [
+      autohide-tdrop.packages.${pkgs.system}.default
+    ];
+}
 ```
 
 ## Usage
@@ -17,7 +50,7 @@ ctrl + t
 	tdrop -n tdrop_kitty --post-create-hook "autohide-tdrop &" -ma -h 60% -w 70% -x 15% -y 0 kitty --class=tdrop_kitty
 ```
 
-### wayland 
+### wayland
 ~/.config/swhkd/swhkdrc
 ```zsh
 ctrl + t
