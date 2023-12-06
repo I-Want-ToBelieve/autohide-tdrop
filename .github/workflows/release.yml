@@ -1,0 +1,22 @@
+---
+  name: Release
+
+  on:
+    push:
+      branches:
+        - main
+        - next
+        - next-major
+        - beta
+        - alpha
+        - "[0-9]+.[0-9]+.x"
+        - "[0-9]+.x"
+
+  jobs:
+    release:
+      uses: semantic-release-action/rust/.github/workflows/release-binary.yml@v5
+      with:
+        targets: |
+          x86_64-unknown-linux-gnu
+      secrets:
+        cargo-registry-token: ${{ secrets.CARGO_REGISTRY_TOKEN }}

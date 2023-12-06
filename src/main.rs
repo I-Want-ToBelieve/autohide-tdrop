@@ -1,26 +1,20 @@
-use breadx::{
-    connection::BufConnection,
-    display::{BasicDisplay, DisplayConnection},
-    prelude::{Display, DisplayBase, DisplayFunctionsExt},
-    protocol::{
-        xproto::{AtomEnum, ChangeWindowAttributesAux, EventMask},
-        Event::PropertyNotify,
-    },
-    NameConnection,
+use std::error::Error;
+use x11rb::protocol::Event;
+use x11rb::{
+    connection::Connection,
+    protocol::xproto::{self, AtomEnum, ConnectionExt, EventMask, Window},
+    rust_connection::RustConnection,
 };
 
-use std::error::Error;
-
-/**
- * @see https://github.com/dimusic/active-win-pos-rs/blob/c0bec6433f79d3a8986c9d73fbe318a13562c641/src/linux/platform_api.rs#L98
- */
 fn get_active_window(
-    connection: &mut BasicDisplay<BufConnection<NameConnection>>,
-    root: u32,
-    atom: u32,
-) -> Result<u32, ()> {
+    connection: &RustConnection,
+    root: Window,
+    atom: xproto::Atom,
+) -> Result<Window, ()> {
     let response = connection
-        .get_property_immediate(false, root, atom, u8::from(AtomEnum::WINDOW), 0, 1)
+        .get_property::<_, u32>(false, root, atom, AtomEnum::WINDOW.into(), 0, 1)
+        .unwrap()
+        .reply()
         .unwrap();
 
     if response.value32().is_none() {
@@ -31,64 +25,65 @@ fn get_active_window(
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
-    /*
-     * @see https://docs.rs/breadx/3.1.0/breadx/
-     */
-    let mut connection = DisplayConnection::connect(None).expect("should connect to x11 server");
-    let root = connection.default_screen().root;
+    let (connection, screen_num) = RustConnection::connect(None)?;
+    let screen = &connection.setup().roots[screen_num];
+    let root = screen.root;
     let net_active_window = connection
-        .intern_atom_immediate(true, "_NET_ACTIVE_WINDOW")
+        .intern_atom(false, b"_NET_ACTIVE_WINDOW")
+        .unwrap()
+        .reply()
         .unwrap()
         .atom;
 
-    /*
-     * @see https://gist.github.com/ssokolow/e7c9aae63fb7973e4d64cff969a78ae8
-     */
-    if let Ok(active_window) = get_active_window(&mut connection, root, net_active_window) {
-        let window_id = &active_window;
-
-        connection.change_window_attributes_checked(
-            root,
-            ChangeWindowAttributesAux {
-                event_mask: EventMask::PROPERTY_CHANGE.into(),
-                background_pixmap: None,
-                background_pixel: None,
-                border_pixmap: None,
-                border_pixel: None,
-                bit_gravity: None,
-                win_gravity: None,
-                backing_store: None,
-                backing_planes: None,
-                backing_pixel: None,
-                override_redirect: None,
-                save_under: None,
-                do_not_propogate_mask: None,
-                colormap: None,
-                cursor: None,
-            },
-        )?;
-
-        // primary event loop
-        loop {
-            let event = connection.wait_for_event()?;
-
-            match event {
-                // match on the Event struct in here
-                PropertyNotify(e) => {
-                    if e.atom == net_active_window {
-                        if let Ok(active_window) =
-                            get_active_window(&mut connection, root, net_active_window)
-                        {
-                            if &active_window != window_id {
-                                connection.unmap_window_checked(*window_id)?;
-                            }
-                        }
-                    }
-                }
-                _ => {}
-            }
-        }
+    let active_window = get_active_window(&connection, root, net_active_window);
+    if active_window.is_err() {
+        eprintln!("Error getting initial active window, exiting program.");
+        return Err(Box::new(std::io::Error::new(
+            std::io::ErrorKind::Other,
+            "Error getting initial active window, exiting program.",
+        )));
     }
 
-    Ok(())
+    let window_id = active_window.unwrap();
+
+    xproto::change_window_attributes(
+        &connection,
+        root,
+        &xproto::ChangeWindowAttributesAux::new().event_mask(EventMask::PROPERTY_CHANGE),
+    )?;
+
+    connection.flush()?;
+
+    loop {
+        let event = connection.wait_for_event();
+
+        if let Ok(Event::PropertyNotify(e)) = event {
+            if e.atom != net_active_window {
+                continue;
+            }
+
+            let active_window = get_active_window(&connection, root, net_active_window);
+
+            if active_window.is_err() {
+                eprintln!("Error getting active window");
+                continue;
+            }
+
+            if active_window.unwrap() == window_id {
+                continue;
+            }
+
+            if let Err(err) = connection.unmap_window(window_id) {
+                eprintln!("Error unmapping window: {:?}", err);
+            } else {
+                connection.flush()?;
+            }
+        } else {
+            eprintln!("X11 server has crashed, exiting program.");
+            return Err(Box::new(std::io::Error::new(
+                std::io::ErrorKind::Other,
+                "X11 server has crashed, exiting program.",
+            )));
+        }
+    }
 }

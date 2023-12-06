@@ -17,4 +17,4 @@ path = "src/main.rs"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-breadx = "3.1.0"
+x11rb = "0.12.0"
