@@ -1,4 +1,4 @@
-use std::error::Error;
+use std::{error::Error, thread, time};
 use x11rb::{
     connection::Connection,
     protocol::{
@@ -52,6 +52,18 @@ fn main() -> Result<(), Box<dyn Error>> {
                         eprintln!("Error unmapping window: {:?}", err);
                     } else {
                         connection.flush()?;
+                    }
+                } else {
+                    thread::sleep(time::Duration::from_millis(50));
+
+                    let active_window = get_active_window(&connection, root, net_active_window)?;
+
+                    if active_window != window_id {
+                        if let Err(err) = connection.unmap_window(window_id) {
+                            eprintln!("Error unmapping window: {:?}", err);
+                        } else {
+                            connection.flush()?;
+                        }
                     }
                 }
             }
