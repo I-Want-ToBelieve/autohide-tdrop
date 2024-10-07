@@ -32,6 +32,8 @@ fn main() -> Result<(), Box<dyn Error>> {
         .reply()?
         .atom;
 
+    thread::sleep(time::Duration::from_millis(50));
+
     let window_id = get_active_window(&connection, root, net_active_window)?;
 
     xproto::change_window_attributes(
@@ -52,18 +54,6 @@ fn main() -> Result<(), Box<dyn Error>> {
                         eprintln!("Error unmapping window: {:?}", err);
                     } else {
                         connection.flush()?;
-                    }
-                } else {
-                    thread::sleep(time::Duration::from_millis(50));
-
-                    let active_window = get_active_window(&connection, root, net_active_window)?;
-
-                    if active_window != window_id {
-                        if let Err(err) = connection.unmap_window(window_id) {
-                            eprintln!("Error unmapping window: {:?}", err);
-                        } else {
-                            connection.flush()?;
-                        }
                     }
                 }
             }
